@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.parstagram.MainActivity
 import com.example.parstagram.Post
 import com.example.parstagram.PostAdapter
@@ -25,6 +26,8 @@ open class FeedFragment : Fragment() {
 
     var allPosts: MutableList<Post> = mutableListOf()
 
+    lateinit var swipeContainer: SwipeRefreshLayout
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -37,6 +40,19 @@ open class FeedFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         postRecyclerView = view.findViewById(R.id.postRecyclerView)
+
+        swipeContainer = view.findViewById(R.id.swipeContainer)
+
+        swipeContainer.setOnRefreshListener {
+            Log.i(TAG, "Refreshing timeline")
+            queryPosts()
+        }
+
+        // Configure the refreshing colors
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light)
 
         adapter = PostAdapter(requireContext(), allPosts)
         postRecyclerView.adapter = adapter
@@ -68,13 +84,28 @@ open class FeedFragment : Fragment() {
                                     post.getUser()?.username)
                         }
 
+                       allPosts.clear()
+
                         allPosts.addAll(posts)
                         adapter.notifyDataSetChanged()
+                        // Now we call setRefreshing(false) to signal refresh has finished
+                        swipeContainer.setRefreshing(false)
                     }
                 }
             }
 
         })
+    }
+
+    fun clear() {
+        allPosts.clear()
+        adapter.notifyDataSetChanged()
+    }
+
+    // Add a list of items -- change to type used
+    fun addAll(tweetList: List<Post>) {
+        allPosts.addAll(tweetList)
+        adapter.notifyDataSetChanged()
     }
 
     companion object {
